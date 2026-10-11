@@ -3,16 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aplikasi Ujian & Koreksi LJK Pro (Eval B Style)</title>
+  <title>Aplikasi Ujian & Scanner LJK Pro (Eval B Style)</title>
   <style>
-    :root { --primary: #2563eb; --secondary: #1e40af; --success: #10b981; --bg: #f8fafc; --text: #1e293b; }
+    :root { --primary: #2563eb; --secondary: #1e40af; --success: #10b981; --bg: #f8fafc; --text: #1e293b; --danger: #ef4444; }
     body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
     .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
     h2 { color: var(--primary); margin-top: 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; display: flex; align-items: center; gap: 10px; }
     
-    /* Tabs Navigation */
-    .tabs { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
-    .tab-btn { background: #e2e8f0; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; color: #475569; transition: 0.2s; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; flex-wrap: wrap; }
+    .tab-btn { background: #e2e8f0; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: 600; color: #475569; transition: 0.2s; }
     .tab-btn.active { background: var(--primary); color: white; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
@@ -40,22 +39,30 @@
     .soal-row { display: flex; align-items: center; margin-bottom: 6px; }
     .soal-num { width: 32px; font-weight: bold; }
     .badge { background: #dbeafe; color: #1e40af; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; display: inline-block; margin-bottom: 15px; }
+
+    /* Visual Scanner Grid Style */
+    .scanner-soal-box { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; background: #fff; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0; }
+    .opt-btn { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid #cbd5e1; background: #fff; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .opt-btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
+    .result-badge { font-weight: bold; padding: 4px 10px; border-radius: 4px; font-size: 12px; }
+    .result-benar { background: #d1fae5; color: #065f46; }
+    .result-salah { background: #fee2e2; color: #991b1b; }
   </style>
 </head>
 <body>
 
 <div class="container no-print">
-  <h2>🎓 Aplikasi Ujian & Scanner LJK Pro (Multi-Kelas)</h2>
-  <div class="badge">🔒 Keamanan Tersegel 100% | SDIT Al Furqon Kotagajah</div>
+  <h2>🎓 Aplikasi Ujian & Scanner LJK Pro (Eval B Style)</h2>
+  <div class="badge">🔒 Auto-Create Database & Enkripsi Aktif | SDIT Al Furqon Kotagajah</div>
 
   <!-- MENU TABS -->
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab(event, 'tabSetup')">1. Pengaturan & Impor Siswa</button>
+    <button class="tab-btn active" onclick="switchTab(event, 'tabSetup')">1. Data Siswa & Pengaturan</button>
     <button class="tab-btn" onclick="switchTab(event, 'tabPrint')">2. Cetak LJK</button>
-    <button class="tab-btn" onclick="switchTab(event, 'tabScan')">3. Koreksi & Scan LJK</button>
+    <button class="tab-btn" onclick="switchTab(event, 'tabScan')">3. Scan & Koreksi Otomatis</button>
   </div>
 
-  <!-- TAB 1: PENGATURAN & IMPOR SISWA -->
+  <!-- TAB 1 -->
   <div id="tabSetup" class="tab-content active">
     <h3>⚙️ Konfigurasi Ujian & Daftar Siswa</h3>
     <div class="grid">
@@ -76,7 +83,7 @@
       </div>
       <div>
         <label>Jumlah Soal:</label>
-        <input type="number" id="jumlahSoal" value="20" min="5" max="50">
+        <input type="number" id="jumlahSoal" value="10" min="5" max="50" onchange="updateJumlahSoal()">
       </div>
       <div>
         <label>Opsi Pilihan Ganda:</label>
@@ -90,51 +97,53 @@
 
     <div class="card">
       <h4 style="margin-top:0;">📥 Impor Data Siswa (Excel / Google Sheets / Manual)</h4>
-      <p style="font-size:13px; color:#64748b;">Cara 1: Copy data dari Excel/Google Sheets lalu Paste ke kotak di bawah (Format kolom: <code>NIS [Tab] Nama Siswa</code> di setiap baris baru).<br>Cara 2: Ketik manual satu per baris.</p>
-      
-      <label>Data Siswa:</label>
-      <textarea id="inputDataSiswa" placeholder="Contoh:&#10;101 | Ahmad Fauzi&#10;102 | Siti Aminah&#10;103 | Budi Santoso"></textarea>
-      
-      <button class="btn btn-green" style="margin-top:12px;" onclick="simpanDaftarSiswa()">💾 Simpan & Sinkronkan Daftar Siswa</button>
+      <p style="font-size:13px; color:#64748b;">Format: <code>NIS [Tab atau |] Nama Siswa</code></p>
+      <textarea id="inputDataSiswa" placeholder="101 | Ahmad Fauzi&#10;102 | Siti Aminah"></textarea>
+      <button class="btn btn-green" style="margin-top:12px;" onclick="simpanDaftarSiswa()">💾 Simpan Daftar Siswa</button>
       <p id="statusSiswa" style="font-weight:600; margin-top:8px; font-size:14px;"></p>
     </div>
   </div>
 
-  <!-- TAB 2: CETAK LJK -->
+  <!-- TAB 2 -->
   <div id="tabPrint" class="tab-content">
     <h3>🖨️ Cetak Lembar Jawab Komputer (LJK)</h3>
-    <p>Pratinjau LJK di bawah otomatis menyesuaikan jumlah soal dan kelas yang Anda pilih di Tab 1.</p>
     <button class="btn" onclick="generateLJK()" style="margin-bottom:15px;">🔄 Perbarui Pratinjau LJK</button>
     <div id="printableLJK"></div>
   </div>
 
-  <!-- TAB 3: KOREKSI & SCAN LJK -->
+  <!-- TAB 3: SCAN & KOREKSI INTERAKTIF (EVAL B STYLE) -->
   <div id="tabScan" class="tab-content">
-    <h3>📱 Panel Koreksi & Scan LJK (Eval B Style)</h3>
+    <h3>📱 Panel Scan & Koreksi Interaktif (Eval B Style)</h3>
     <div class="card">
       <div class="grid">
         <div>
-          <label>Pilih Siswa (Berdasarkan Impor):</label>
+          <label>Pilih Siswa yang Diteliti:</label>
           <select id="pilihSiswa"></select>
         </div>
         <div>
           <label>Kunci Jawaban (Pisahkan koma):</label>
-          <input type="text" id="inputKunci" value="A,B,C,D,A,B,C,D,A,B,C,D,A,B,C,D,A,B,C,D">
+          <input type="text" id="inputKunci" value="A,B,C,D,A,B,C,D,A,B" oninput="initScannerGrid()">
         </div>
       </div>
 
-      <label>Jawaban Siswa (Hasil Scan / Input Cepat):</label>
-      <input type="text" id="inputJawabanSiswa" value="A,B,C,X,A,B,C,D,A,B,C,D,A,B,C,D,A,B,C,D" placeholder="Contoh: A,B,C,D...">
+      <div style="margin: 15px 0; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1;">
+        <h4 style="margin-top:0; color: var(--primary);">🎯 Simulasi Scan / Klik Lembar Jawab Cepat</h4>
+        <p style="font-size: 13px; color: #64748b;">Sambil melihat LJK fisik siswa, klik pilihan jawaban yang dihitamkan. Sistem langsung mendeteksi mana yang <b>BENAR (Hijau)</b> dan <b>SALAH (Merah)</b> secara instan!</p>
+        
+        <div id="interactiveScannerGrid" style="max-height: 320px; overflow-y: auto; padding-right: 5px;"></div>
+      </div>
 
-      <button class="btn btn-green" style="margin-top:15px;" onclick="kirimNilaiKeCloud()">🚀 Proses Nilai & Kirim ke Cloud</button>
+      <button class="btn btn-green" onclick="kirimNilaiKeCloud()">🚀 Simpan Nilai Final ke Google Sheets</button>
       <p id="statusKirim" style="font-weight:bold; margin-top:10px;"></p>
     </div>
   </div>
 </div>
 
 <script>
+  // ⚠️ GANTI DENGAN URL CLOUDFLARE WORKER ANDA
   const CLOUDFLARE_WORKER_URL = "https://hidden-art-b7ec.hijrah-id987.workers.dev/";
   let databaseSiswaLocal = JSON.parse(localStorage.getItem('db_siswa_sekolah') || '{}');
+  let jawabanSiswaAktif = [];
 
   function switchTab(evt, tabId) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -142,7 +151,96 @@
     document.getElementById(tabId).classList.add('active');
     evt.currentTarget.classList.add('active');
     if(tabId === 'tabPrint') generateLJK();
-    if(tabId === 'tabScan') muatSiswaKelas();
+    if(tabId === 'tabScan') {
+      muatSiswaKelas();
+      initScannerGrid();
+    }
+  }
+
+  function updateJumlahSoal() {
+    let jml = parseInt(document.getElementById('jumlahSoal').value);
+    let defaultKunci = [];
+    let letters = ['A','B','C','D'];
+    for(let i=0; i<jml; i++) {
+      defaultKunci.push(letters[i % 4]);
+    }
+    document.getElementById('inputKunci').value = defaultKunci.join(',');
+    initScannerGrid();
+  }
+
+  function initScannerGrid() {
+    const jmlSoal = parseInt(document.getElementById('jumlahSoal').value);
+    const jmlOpsi = parseInt(document.getElementById('jumlahOpsi').value);
+    const opsiLetters = ['A', 'B', 'C', 'D', 'E'].slice(0, jmlOpsi);
+    
+    if (jawabanSiswaAktif.length !== jmlSoal) {
+      jawabanSiswaAktif = new Array(jmlSoal).fill("");
+    }
+    
+    const kunci = document.getElementById('inputKunci').value.split(',').map(s => s.trim().toUpperCase());
+    let container = document.getElementById('interactiveScannerGrid');
+    container.innerHTML = "";
+
+    for(let i=0; i<jmlSoal; i++) {
+      let row = document.createElement('div');
+      row.className = 'scanner-soal-box';
+      
+      let labelNum = document.createElement('strong');
+      labelNum.innerText = `No. ${i+1}:`;
+      labelNum.style.width = "60px";
+      row.appendChild(labelNum);
+
+      let opsiDiv = document.createElement('div');
+      opsiDiv.style.display = "flex";
+      opsiDiv.style.gap = "8px";
+
+      opsiLetters.forEach(letter => {
+        let btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'opt-btn' + (jawabanSiswaAktif[i] === letter ? ' selected' : '');
+        btn.innerText = letter;
+        btn.onclick = function() {
+          jawabanSiswaAktif[i] = letter;
+          opsiDiv.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          updateStatusKoreksiSoal(i, kunci[i]);
+        };
+        opsiDiv.appendChild(btn);
+      });
+      row.appendChild(opsiDiv);
+
+      let statusBadge = document.createElement('span');
+      statusBadge.id = `badge_soal_${i}`;
+      statusBadge.className = 'result-badge';
+      
+      let jawabSiswa = jawabanSiswaAktif[i];
+      if (!jawabSiswa) {
+        statusBadge.innerText = "-";
+      } else if (jawabSiswa === kunci[i]) {
+        statusBadge.className = 'result-badge result-benar';
+        statusBadge.innerText = "BENAR ✓";
+      } else {
+        statusBadge.className = 'result-badge result-salah';
+        statusBadge.innerText = `SALAH ✗ (Kunci: ${kunci[i] || '?'})`;
+      }
+
+      row.appendChild(statusBadge);
+      container.appendChild(row);
+    }
+  }
+
+  function updateStatusKoreksiSoal(index, kunciBenar) {
+    let badge = document.getElementById(`badge_soal_${index}`);
+    let jawabSiswa = jawabanSiswaAktif[index];
+    if(!jawabSiswa) return;
+
+    if(jawabSiswa === kunciBenar) {
+      badge.className = 'result-badge result-benar';
+      badge.innerText = "BENAR ✓";
+    } else {
+      badge.className = 'result-badge result-salah';
+      badge.innerText = `SALAH ✗ (Kunci: ${kunciBenar || '?'})`;
+    }
   }
 
   function simpanDaftarSiswa() {
@@ -150,16 +248,11 @@
     const rawText = document.getElementById('inputDataSiswa').value.trim();
     const statusEl = document.getElementById('statusSiswa');
 
-    if(!rawText) {
-      alert("Masukkan data siswa terlebih dahulu!");
-      return;
-    }
+    if(!rawText) { alert("Masukkan data siswa terlebih dahulu!"); return; }
 
     const lines = rawText.split('\n');
     let listSiswa = [];
-
     lines.forEach(line => {
-      // Mendukung pemisah tab (Excel copy-paste) atau garis vertikal (|)
       let parts = line.includes('\t') ? line.split('\t') : line.split('|');
       if(parts.length >= 2) {
         listSiswa.push({ nis: parts[0].trim(), nama: parts[1].trim() });
@@ -167,19 +260,18 @@
     });
 
     if(listSiswa.length === 0) {
-      statusEl.style.color = "#dc2626";
-      statusEl.innerText = "Format data salah! Gunakan format: NIS [Tab/|] Nama Siswa";
+      statusEl.style.color = "var(--danger)";
+      statusEl.innerText = "Format salah! Gunakan format: NIS | Nama Siswa";
       return;
     }
 
     databaseSiswaLocal[kelas] = listSiswa;
     localStorage.setItem('db_siswa_sekolah', JSON.stringify(databaseSiswaLocal));
 
-    statusEl.style.color = "#10b981";
-    statusEl.innerText = `Sukses! Berhasil memuat ${listSiswa.length} siswa untuk ${kelas}.`;
+    statusEl.style.color = "var(--success)";
+    statusEl.innerText = `Sukses! ${listSiswa.length} siswa tersimpan untuk ${kelas}.`;
     muatSiswaKelas();
 
-    // Kirim sinkronisasi ke cloud background
     fetch(CLOUDFLARE_WORKER_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -224,7 +316,7 @@
       <div class="ljk-paper">
         <div class="ljk-header">
           <h3 style="margin:0;">LEMBAR JAWABAN KOMPUTER (LJK)</h3>
-          <p style="margin:3px 0 0 0; font-size:12px;">SDIT AL FURQON KOTAGAJAH - ${kelas}</p>
+          <p style="margin:3px 0 0 0; font-size:12px;">SDIT AL FURQON KOTAGAJAH - ${kelas} (${mapel})</p>
         </div>
         
         <table style="width:100%; margin-bottom:15px; font-size:13px; border-collapse:collapse;">
@@ -266,24 +358,23 @@
   async function kirimNilaiKeCloud() {
     const statusEl = document.getElementById('statusKirim');
     statusEl.style.color = "#1e293b";
-    statusEl.innerText = "Mengirim nilai ke server aman...";
+    statusEl.innerText = "Mengirim nilai ke cloud...";
 
     const kelas = document.getElementById('kelas').value;
     const mapel = document.getElementById('mapel').value;
     const siswaVal = document.getElementById('pilihSiswa').value;
 
     if(!siswaVal || siswaVal.includes("Belum ada")) {
-      alert("Silakan impor dan pilih data siswa terlebih dahulu di Tab 1!");
+      alert("Pilih data siswa terlebih dahulu di Tab 1!");
       statusEl.innerText = "";
       return;
     }
 
     const siswaData = JSON.parse(siswaVal);
-    const kunciJawaban = document.getElementById('inputKunci').value.split(',').map(s => s.trim());
-    const jawabanSiswa = document.getElementById('inputJawabanSiswa').value.split(',').map(s => s.trim());
+    const kunciJawaban = document.getElementById('inputKunci').value.split(',').map(s => s.trim().toUpperCase());
 
     try {
-      const response = await fetch(CLOUDFLARE_WORKER_URL, {
+      const response = await href = await fetch(CLOUDFLARE_WORKER_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -293,25 +384,24 @@
           nis: siswaData.nis,
           namaSiswa: siswaData.nama,
           kunciJawaban,
-          jawabanSiswa
+          jawabanSiswa: jawabanSiswaAktif
         })
       });
 
       const result = await response.json();
       if(result.status === "success") {
-        statusEl.style.color = "#10b981";
-        statusEl.innerText = `Sukses! Nilai ${siswaData.nama}: ${result.nilai} (Benar ${result.benar}/${result.totalSoal}) tersimpan aman.`;
+        statusEl.style.color = "var(--success)";
+        statusEl.innerText = `Sukses! Nilai ${siswaData.nama}: ${result.nilai} (Benar ${result.benar}/${result.totalSoal}) tersimpan di Google Sheets.`;
       } else {
-        statusEl.style.color = "#dc2626";
+        statusEl.style.color = "var(--danger)";
         statusEl.innerText = "Gagal: " + result.message;
       }
     } catch (err) {
-      statusEl.style.color = "#dc2626";
+      statusEl.style.color = "var(--danger)";
       statusEl.innerText = "Kesalahan koneksi: " + err.message;
     }
   }
 
-  // Load awal
   muatSiswaKelas();
 </script>
 
